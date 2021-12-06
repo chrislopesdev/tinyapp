@@ -23,8 +23,13 @@ app.get('/hello', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  const TemplateVars = { urls: urlDatabase };
-  res.render('urls_index', TemplateVars);
+  const templateVars = { urls: urlDatabase };
+  res.render('urls_index', templateVars);
+});
+
+app.get('/urls/:shortURL', (req, res) => {
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  res.render('urls_show', templateVars);
 });
 
 // variables set in one app.get statement are not available in another
