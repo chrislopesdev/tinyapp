@@ -1,3 +1,4 @@
+// const { Template } = require('ejs');
 const express = require('express');
 
 const app = express();
@@ -19,6 +20,11 @@ app.get('/urls.json', (req, res) => {
 
 app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
+});
+
+app.get('/urls', (req, res) => {
+  const TemplateVars = { urls: urlDatabase };
+  res.render('urls_index', TemplateVars);
 });
 
 // variables set in one app.get statement are not available in another
