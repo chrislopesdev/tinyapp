@@ -8,6 +8,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const generateRandomString = () => {
   let randomString = '';
+  // eslint-disable-next-line no-plusplus
   for (let i = 0; i < 6; i++) {
     const randomCharCode = Math.floor(Math.random() * 26 + 97);
     const randomChar = String.fromCharCode(randomCharCode);
@@ -43,7 +44,9 @@ app.get('/urls/new', (req, res) => {
 });
 
 app.post('/urls', (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  // console.log(req.body); // Log the POST request body to the console
   res.send('Ok'); // Respond with 'Ok' (we will replace this)
 });
 
