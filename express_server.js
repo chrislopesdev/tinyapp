@@ -1,7 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 
 const app = express();
+app.use(cookieParser());
 const PORT = 8080; // default port 8080
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -24,58 +26,67 @@ const urlDatabase = {
   '9sm5xK': 'http://www.google.com',
 };
 
-app.get('/', (req, res) => {
-  res.send('Hello!');
+app.get('/', (request, response) => {
+  response.send('Hello!');
 });
 
-app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
+app.get('/urls.json', (request, response) => {
+  response.json(urlDatabase);
 });
 
 // add post route to receive form submission
-app.get('/urls', (req, res) => {
+app.get('/urls', (request, response) => {
   const templateVars = { urls: urlDatabase };
-  res.render('urls_index', templateVars);
+  response.render('urls_index', templateVars);
 });
 
 // add route to show url submit form
-app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
+app.get('/urls/new', (request, response) => {
+  response.render('urls_new');
 });
 
 // redirect short urls
-app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  res.redirect(longURL);
+app.get('/u/:shortURL', (request, response) => {
+  const longURL = urlDatabase[request.params.shortURL];
+  response.redirect(longURL);
 });
 
 // redirect after form submission
-app.post('/urls', (req, res) => {
+app.post('/urls', (request, response) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
-  console.log(req.body); // Log the POST request body to the console
-  res.redirect(`/urls/${shortURL}`);
+  urlDatabase[shortURL] = request.body.longURL;
+  console.log(request.body); // Log the POST request body to the console
+  response.redirect(`/urls/${shortURL}`);
 });
 
-// key: req.params.shortURL
-// value: urlDatabase[req.params.shortURL]
-app.get('/urls/:shortURL', (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
-  res.render('urls_show', templateVars);
+// key: request.params.shortURL
+// value: urlDatabase[request.params.shortURL]
+app.get('/urls/:shortURL', (request, response) => {
+  const templateVars = {
+    shortURL: request.params.shortURL,
+    longURL: urlDatabase[request.params.shortURL],
+  };
+  response.render('urls_show', templateVars);
 });
 
-app.post('/urls/:shortURL/delete', (req, res) => {
+app.post('/urls/:shortURL/delete', (request, response) => {
   console.log('delete route');
-  const { shortURL } = req.params;
+  const { shortURL } = request.params;
   delete urlDatabase[shortURL];
-  res.redirect('/urls');
+  response.redirect('/urls');
 });
 
-app.post('/urls/:id', (req, res) => {
-  const { longURL } = req.body;
-  const shortURL = req.params.id;
+app.post('/urls/:id', (request, response) => {
+  const { longURL } = request.body;
+  const shortURL = request.params.id;
   urlDatabase[shortURL] = longURL;
-  res.redirect('/urls');
+  response.redirect('/urls');
+});
+
+app.post('/login', (request, response) => {
+  const { username } = request.body;
+  response.cookie('username', username);
+  response.redirect('/urls');
 });
 
 app.listen(PORT, () => {
