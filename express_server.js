@@ -24,8 +24,14 @@ const generateRandomString = () => {
 
 // temp database object
 const urlDatabase = {
-  b2xVn2: 'http://www.lighthouselabs.ca',
-  '9sm5xK': 'http://www.google.com',
+  b2xVn2: {
+    longURL: 'http://www.lighthouselabs.ca',
+    userID: 'user01',
+  },
+  '9sm5xK': {
+    longURL: 'http://www.google.com',
+    userID: 'user02',
+  },
 };
 
 // user database
@@ -97,14 +103,19 @@ app.get('/urls/new', (request, response) => {
 
 // redirect short urls
 app.get('/u/:shortURL', (request, response) => {
-  const longURL = urlDatabase[request.params.shortURL];
+  const { longURL } = urlDatabase[request.params.shortURL];
   response.redirect(longURL);
 });
 
 // redirect after form submission
 app.post('/urls', (request, response) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = request.body.longURL;
+  const userID = request.cookies.user_id;
+  urlDatabase[shortURL] = {
+    longURL: request.body.longURL,
+    userID,
+  };
+
   // console.log(request.body); // Log the POST request body to the console
   response.redirect(`/urls/${shortURL}`);
 });
@@ -115,7 +126,7 @@ app.get('/urls/:shortURL', (request, response) => {
   const userID = request.cookies.user_id;
   const templateVars = {
     shortURL: request.params.shortURL,
-    longURL: urlDatabase[request.params.shortURL],
+    longURL: urlDatabase[request.params.shortURL].longURL,
     user: users[userID],
   };
   response.render('urls_show', templateVars);
