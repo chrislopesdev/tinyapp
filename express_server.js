@@ -88,7 +88,11 @@ app.get('/urls/new', (request, response) => {
   const templateVars = {
     user: users[userID],
   };
-  response.render('urls_new', templateVars);
+  if (userID) {
+    response.render('urls_new', templateVars);
+  } else {
+    response.redirect('/login');
+  }
 });
 
 // redirect short urls
@@ -154,7 +158,7 @@ app.post('/login', (request, response) => {
 // clear cookie for logout
 app.post('/logout', (request, response) => {
   response.clearCookie('user_id');
-  response.redirect('/urls');
+  response.redirect('/login');
 });
 
 // create registration page from template
