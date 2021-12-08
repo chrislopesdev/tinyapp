@@ -6,7 +6,9 @@ const app = express();
 app.use(cookieParser());
 const PORT = 8080; // default port 8080
 app.set('view engine', 'ejs');
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({
+  extended: true,
+}));
 
 // generate random string for short url
 const generateRandomString = () => {
@@ -26,6 +28,32 @@ const urlDatabase = {
   '9sm5xK': 'http://www.google.com',
 };
 
+// user database
+const users = {
+  user01: {
+    id: 'user01',
+    email: 'user01@email.com',
+    password: '10resu',
+  },
+  user02: {
+    id: 'user02',
+    email: 'user02@email.com',
+    password: '20resu',
+  },
+};
+
+// helper function: check email exists in database
+const findUserByEmail = (email, database) => {
+  for (const userId in database) {
+    const user = database[userId];
+
+    if (user.email === email) {
+      return user;
+    }
+  }
+  return false;
+};
+
 app.get('/', (request, response) => {
   response.send('Hello!');
 });
@@ -36,16 +64,21 @@ app.get('/urls.json', (request, response) => {
 
 // add post route to receive form submission
 app.get('/urls', (request, response) => {
+  const userID = request.cookies.user_id;
   const templateVars = {
     urls: urlDatabase,
-    username: request.cookies.username,
+    // username: request.cookies.username,
+    user: users[userID],
   };
   response.render('urls_index', templateVars);
 });
 
 // add route to show url submit form
 app.get('/urls/new', (request, response) => {
-  const templateVars = { username: request.cookies.username };
+  const userID = request.cookies.user_id;
+  const templateVars = {
+    user: users[userID],
+  };
   response.render('urls_new', templateVars);
 });
 
@@ -66,23 +99,28 @@ app.post('/urls', (request, response) => {
 // key: request.params.shortURL
 // value: urlDatabase[request.params.shortURL]
 app.get('/urls/:shortURL', (request, response) => {
+  const userID = request.cookies.user_id;
   const templateVars = {
     shortURL: request.params.shortURL,
     longURL: urlDatabase[request.params.shortURL],
-    username: request.cookies.username,
+    user: users[userID],
   };
   response.render('urls_show', templateVars);
 });
 
 app.post('/urls/:shortURL/delete', (request, response) => {
   console.log('delete route');
-  const { shortURL } = request.params;
+  const {
+    shortURL,
+  } = request.params;
   delete urlDatabase[shortURL];
   response.redirect('/urls');
 });
 
 app.post('/urls/:id', (request, response) => {
-  const { longURL } = request.body;
+  const {
+    longURL,
+  } = request.body;
   const shortURL = request.params.id;
   urlDatabase[shortURL] = longURL;
   response.redirect('/urls');
@@ -90,21 +128,68 @@ app.post('/urls/:id', (request, response) => {
 
 // create cookie for login
 app.post('/login', (request, response) => {
-  const { username } = request.body;
+  const {
+    username,
+  } = request.body;
   response.cookie('username', username);
   response.redirect('/urls');
 });
 
 // clear cookie for logout
 app.post('/logout', (request, response) => {
-  response.clearCookie('username');
+  response.clearCookie('user_id');
   response.redirect('/urls');
 });
 
 // create registration page from template
 app.get('/register', (request, response) => {
-  const templateVars = { username: request.cookies.username };
+  const userID = request.cookies.user_id;
+  const templateVars = {
+    user: users[userID],
+  };
   response.render('register', templateVars);
+});
+
+// registration handler
+app.post('/register', (request, response) => {
+  const userID = generateRandomString();
+  const userEmail = request.body.email;
+  const userPass = request.body.password;
+
+  const userFound = findUserByEmail(userEmail, users);
+
+  if (userEmail === '' || userPass === '') {
+    response.status(400).send('Please fill in all fields.');
+  }
+
+  if (userFound) {
+    response.status(400).send('Sorry');
+    return;
+  }
+
+  // create new user in database
+  users[userID] = {
+    id: userID,
+    email: userEmail,
+    password: userPass,
+  };
+  // create user id cookie
+  response.cookie('user_id', userID);
+  console.log(users);
+  response.redirect('/urls');
+});
+
+// create login page from template
+app.get('/login', (request, response) => {
+  const userID = request.cookies.user_id;
+  const templateVars = {
+    user: users[userID],
+  };
+  response.render('login', templateVars);
+});
+
+app.post('/login', (request, response) => {
+
 });
 
 app.listen(PORT, () => {
