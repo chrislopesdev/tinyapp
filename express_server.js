@@ -54,6 +54,20 @@ const findUserByEmail = (email, database) => {
   return false;
 };
 
+const authenticateUser = (email, password, db) => {
+  console.log({ email, password });
+
+  const user = findUserByEmail(email, db);
+
+  console.log({ user });
+
+  if (user && user.password === password) {
+    return user;
+  }
+
+  return false;
+};
+
 app.get('/', (request, response) => {
   response.send('Hello!');
 });
@@ -67,7 +81,6 @@ app.get('/urls', (request, response) => {
   const userID = request.cookies.user_id;
   const templateVars = {
     urls: urlDatabase,
-    // username: request.cookies.username,
     user: users[userID],
   };
   response.render('urls_index', templateVars);
@@ -128,11 +141,18 @@ app.post('/urls/:id', (request, response) => {
 
 // create cookie for login
 app.post('/login', (request, response) => {
-  const {
-    username,
-  } = request.body;
-  response.cookie('username', username);
-  response.redirect('/urls');
+  const { email } = request.body;
+  const { password } = request.body;
+
+  const user = authenticateUser(email, password, users);
+
+  if (user) {
+    response.cookie('user_id', user.id);
+    response.redirect('/urls');
+    return;
+  }
+  // user is not authenticated
+  response.status(403).send('wrong credentials!');
 });
 
 // clear cookie for logout
@@ -163,7 +183,7 @@ app.post('/register', (request, response) => {
   }
 
   if (userFound) {
-    response.status(400).send('Sorry');
+    response.status(400).send('Sorry, a user is already registered with this email.');
     return;
   }
 
@@ -188,9 +208,9 @@ app.get('/login', (request, response) => {
   response.render('login', templateVars);
 });
 
-app.post('/login', (request, response) => {
+// app.post('/login', (request, response) => {
 
-});
+// });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
