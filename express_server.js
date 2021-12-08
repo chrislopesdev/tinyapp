@@ -46,7 +46,6 @@ const users = {
 const findUserByEmail = (email, database) => {
   for (const userId in database) {
     const user = database[userId];
-
     if (user.email === email) {
       return user;
     }
@@ -55,16 +54,13 @@ const findUserByEmail = (email, database) => {
 };
 
 const authenticateUser = (email, password, db) => {
-  console.log({ email, password });
-
+  // get user object
   const user = findUserByEmail(email, db);
 
-  console.log({ user });
-
+  // check that passwords match => return user object
   if (user && user.password === password) {
     return user;
   }
-
   return false;
 };
 
@@ -105,7 +101,7 @@ app.get('/u/:shortURL', (request, response) => {
 app.post('/urls', (request, response) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = request.body.longURL;
-  console.log(request.body); // Log the POST request body to the console
+  // console.log(request.body); // Log the POST request body to the console
   response.redirect(`/urls/${shortURL}`);
 });
 
@@ -122,7 +118,7 @@ app.get('/urls/:shortURL', (request, response) => {
 });
 
 app.post('/urls/:shortURL/delete', (request, response) => {
-  console.log('delete route');
+  // console.log('delete route');
   const {
     shortURL,
   } = request.params;
@@ -178,10 +174,12 @@ app.post('/register', (request, response) => {
 
   const userFound = findUserByEmail(userEmail, users);
 
+  // if email or password is blank send error
   if (userEmail === '' || userPass === '') {
     response.status(400).send('Please fill in all fields.');
   }
 
+  // if email already in database send error
   if (userFound) {
     response.status(400).send('Sorry, a user is already registered with this email.');
     return;
@@ -195,7 +193,7 @@ app.post('/register', (request, response) => {
   };
   // create user id cookie
   response.cookie('user_id', userID);
-  console.log(users);
+  // console.log(users);
   response.redirect('/urls');
 });
 
@@ -207,10 +205,6 @@ app.get('/login', (request, response) => {
   };
   response.render('login', templateVars);
 });
-
-// app.post('/login', (request, response) => {
-
-// });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
