@@ -36,13 +36,17 @@ app.get('/urls.json', (request, response) => {
 
 // add post route to receive form submission
 app.get('/urls', (request, response) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = {
+    urls: urlDatabase,
+    username: request.cookies.username,
+  };
   response.render('urls_index', templateVars);
 });
 
 // add route to show url submit form
 app.get('/urls/new', (request, response) => {
-  response.render('urls_new');
+  const templateVars = { username: request.cookies.username };
+  response.render('urls_new', templateVars);
 });
 
 // redirect short urls
@@ -65,6 +69,7 @@ app.get('/urls/:shortURL', (request, response) => {
   const templateVars = {
     shortURL: request.params.shortURL,
     longURL: urlDatabase[request.params.shortURL],
+    username: request.cookies.username,
   };
   response.render('urls_show', templateVars);
 });
@@ -83,9 +88,16 @@ app.post('/urls/:id', (request, response) => {
   response.redirect('/urls');
 });
 
+// create cookie for login
 app.post('/login', (request, response) => {
   const { username } = request.body;
   response.cookie('username', username);
+  response.redirect('/urls');
+});
+
+// clear cookie for logout
+app.post('/logout', (request, response) => {
+  response.clearCookie('username');
   response.redirect('/urls');
 });
 
