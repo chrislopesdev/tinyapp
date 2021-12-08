@@ -101,6 +101,12 @@ app.post('/logout', (request, response) => {
   response.redirect('/urls');
 });
 
+// create registration page from template
+app.get('/register', (request, response) => {
+  const templateVars = { username: request.cookies.username };
+  response.render('register', templateVars);
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
