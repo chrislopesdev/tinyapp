@@ -1,6 +1,5 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-// const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 
@@ -13,7 +12,6 @@ const {
 } = require('./helpers');
 
 const app = express();
-// app.use(cookieParser());
 const PORT = 8080; // default port 8080
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({
@@ -21,7 +19,7 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(cookieSession({
   name: 'session',
-  keys: ['key1', 'key2'],
+  keys: ['5D3D48A41D6A1', 'E4FFB53D66B9A'],
 
   // Cookie Options
   maxAge: 24 * 60 * 60 * 1000, // 24 hours
@@ -43,7 +41,12 @@ const urlDatabase = {
 const users = {};
 
 app.get('/', (request, response) => {
-  response.send('Hello!');
+  const userID = request.session.user_id;
+  if (userID) {
+    response.redirect('/urls');
+  } else {
+    response.redirect('/login');
+  }
 });
 
 app.get('/urls.json', (request, response) => {
@@ -97,7 +100,6 @@ app.post('/urls', (request, response) => {
 // value: urlDatabase[request.params.shortURL]
 app.get('/urls/:shortURL', (request, response) => {
   const userID = request.session.user_id;
-  // const { longURL } = urlDatabase[request.params.shortURL];
   const templateVars = {
     shortURL: request.params.shortURL,
     longURL: urlDatabase[request.params.shortURL].longURL,
@@ -206,7 +208,6 @@ app.post('/register', (request, response) => {
 
   // create user id cookie
   request.session.user_id = userID;
-  console.log(users);
   response.redirect('/urls');
 });
 
