@@ -45,9 +45,15 @@
         </tr>
         <% } %>
       </tbody>
+
+
       <% } %>
     </table>
-
+    <% if (user) { %>
+    <div class="card-footer text-muted text-center">
+      <a href="/urls/new">Create a new short url.</a>
+    </div>
+    <% } %>
 
     <% if (!user) { %>
     <div class="alert alert-danger" role="alert">
