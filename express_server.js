@@ -59,6 +59,7 @@ const findUserByEmail = (email, database) => {
   return false;
 };
 
+// helper function: authenticate user
 const authenticateUser = (email, password, db) => {
   // get user object
   const user = findUserByEmail(email, db);
@@ -68,6 +69,17 @@ const authenticateUser = (email, password, db) => {
     return user;
   }
   return false;
+};
+
+// helper function: user urls object
+const urlsForUser = (id, urlDatabase) => {
+  const userUrls = {};
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === id) {
+      userUrls[shortURL] = urlDatabase[shortURL];
+    }
+  }
+  return userUrls;
 };
 
 app.get('/', (request, response) => {
@@ -81,8 +93,9 @@ app.get('/urls.json', (request, response) => {
 // add post route to receive form submission
 app.get('/urls', (request, response) => {
   const userID = request.cookies.user_id;
+
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(userID, urlDatabase),
     user: users[userID],
   };
   response.render('urls_index', templateVars);
@@ -124,6 +137,7 @@ app.post('/urls', (request, response) => {
 // value: urlDatabase[request.params.shortURL]
 app.get('/urls/:shortURL', (request, response) => {
   const userID = request.cookies.user_id;
+  // const { longURL } = urlDatabase[request.params.shortURL];
   const templateVars = {
     shortURL: request.params.shortURL,
     longURL: urlDatabase[request.params.shortURL].longURL,
@@ -133,21 +147,34 @@ app.get('/urls/:shortURL', (request, response) => {
 });
 
 app.post('/urls/:shortURL/delete', (request, response) => {
-  // console.log('delete route');
+  const userID = request.cookies.user_id;
   const {
     shortURL,
   } = request.params;
-  delete urlDatabase[shortURL];
-  response.redirect('/urls');
+
+  // check to see if user can delete urls
+  const userURLS = urlsForUser(userID, urlDatabase);
+  if (Object.keys(userURLS).includes(shortURL)) {
+    delete urlDatabase[shortURL];
+    response.redirect('/urls');
+  } else {
+    response.status(400).send('You do not have permissions to delete urls.');
+  }
 });
 
 app.post('/urls/:id', (request, response) => {
-  const {
-    longURL,
-  } = request.body;
+  const { longURL } = request.body;
   const shortURL = request.params.id;
-  urlDatabase[shortURL] = longURL;
-  response.redirect('/urls');
+  const userID = request.cookies.user_id;
+
+  // check to see if user can edit urls
+  const userURLS = urlsForUser(userID, urlDatabase);
+  if (Object.keys(userURLS).includes(shortURL)) {
+    urlDatabase[shortURL].longURL = longURL;
+    response.redirect('/urls');
+  } else {
+    response.status(400).send('You do not have permissions to edit urls.');
+  }
 });
 
 // create cookie for login

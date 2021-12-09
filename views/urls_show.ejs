@@ -14,6 +14,7 @@
 
   <div class="card text-center">
     <div class="card-header"></div>
+    <% if (user) { %>
     <div class="card-body">
       <h5 class="card-title">TinyURL for: <%= longURL %></h5>
       <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
@@ -23,7 +24,7 @@
       <div class="mx-auto" style="width: max-content;">
 
         <h5>Edit</h5>
-        <form class="form-inline" method="post">
+        <form class="form-inline" action="/urls/<%= shortURL %>" method="POST">
           <div class="form-group mb-2">
           </div>
           <div class="form-group mx-sm-3 mb-2">
@@ -34,6 +35,12 @@
         </form>
       </div>
     </div>
+    <% } %>
+    <% if (!user) { %>
+    <div class="alert alert-danger" role="alert">
+      Please <a href="/login">sign in</a> to view / edit urls.
+    </div>
+    <% } %>
   </div>
   <!-- <div class="card-footer text-muted"></div> -->
   </div>
