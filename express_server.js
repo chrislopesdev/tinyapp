@@ -1,14 +1,22 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 
 const app = express();
-app.use(cookieParser());
+// app.use(cookieParser());
 const PORT = 8080; // default port 8080
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({
   extended: true,
+}));
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2'],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours
 }));
 
 // generate random string for short url
@@ -36,18 +44,7 @@ const urlDatabase = {
 };
 
 // user database
-const users = {
-  user01: {
-    id: 'user01',
-    email: 'user01@email.com',
-    password: '10resu',
-  },
-  user02: {
-    id: 'user02',
-    email: 'user02@email.com',
-    password: '20resu',
-  },
-};
+const users = {};
 
 // helper function: check email exists in database
 const findUserByEmail = (email, database) => {
@@ -93,7 +90,7 @@ app.get('/urls.json', (request, response) => {
 
 // add post route to receive form submission
 app.get('/urls', (request, response) => {
-  const userID = request.cookies.user_id;
+  const userID = request.session.user_id;
 
   const templateVars = {
     urls: urlsForUser(userID, urlDatabase),
@@ -104,7 +101,7 @@ app.get('/urls', (request, response) => {
 
 // add route to show url submit form
 app.get('/urls/new', (request, response) => {
-  const userID = request.cookies.user_id;
+  const userID = request.session.user_id;
   const templateVars = {
     user: users[userID],
   };
@@ -124,7 +121,7 @@ app.get('/u/:shortURL', (request, response) => {
 // redirect after form submission
 app.post('/urls', (request, response) => {
   const shortURL = generateRandomString();
-  const userID = request.cookies.user_id;
+  const userID = request.session.user_id;
   urlDatabase[shortURL] = {
     longURL: request.body.longURL,
     userID,
@@ -137,7 +134,7 @@ app.post('/urls', (request, response) => {
 // key: request.params.shortURL
 // value: urlDatabase[request.params.shortURL]
 app.get('/urls/:shortURL', (request, response) => {
-  const userID = request.cookies.user_id;
+  const userID = request.session.user_id;
   // const { longURL } = urlDatabase[request.params.shortURL];
   const templateVars = {
     shortURL: request.params.shortURL,
@@ -148,7 +145,7 @@ app.get('/urls/:shortURL', (request, response) => {
 });
 
 app.post('/urls/:shortURL/delete', (request, response) => {
-  const userID = request.cookies.user_id;
+  const userID = request.session.user_id;
   const {
     shortURL,
   } = request.params;
@@ -166,7 +163,7 @@ app.post('/urls/:shortURL/delete', (request, response) => {
 app.post('/urls/:id', (request, response) => {
   const { longURL } = request.body;
   const shortURL = request.params.id;
-  const userID = request.cookies.user_id;
+  const userID = request.session.user_id;
 
   // check to see if user can edit urls
   const userURLS = urlsForUser(userID, urlDatabase);
@@ -180,7 +177,7 @@ app.post('/urls/:id', (request, response) => {
 
 // create login page from template
 app.get('/login', (request, response) => {
-  const userID = request.cookies.user_id;
+  const userID = request.session.user_id;
   const templateVars = {
     user: users[userID],
   };
@@ -195,7 +192,7 @@ app.post('/login', (request, response) => {
   const user = authenticateUser(email, password, users);
 
   if (user) {
-    response.cookie('user_id', user.id);
+    request.session.user_id = userID;
     response.redirect('/urls');
     return;
   }
@@ -205,13 +202,13 @@ app.post('/login', (request, response) => {
 
 // clear cookie for logout
 app.post('/logout', (request, response) => {
-  response.clearCookie('user_id');
+  request.session = null;
   response.redirect('/login');
 });
 
 // create registration page from template
 app.get('/register', (request, response) => {
-  const userID = request.cookies.user_id;
+  const userID = request.session.user_id;
   const templateVars = {
     user: users[userID],
   };
@@ -241,10 +238,12 @@ app.post('/register', (request, response) => {
   users[userID] = {
     id: userID,
     email: userEmail,
+    // hash password
     password: bcrypt.hashSync(userPass, 10),
   };
+
   // create user id cookie
-  response.cookie('user_id', userID);
+  request.session.user_id = userID;
   // console.log(users);
   response.redirect('/urls');
 });
