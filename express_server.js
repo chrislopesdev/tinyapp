@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 app.use(cookieParser());
@@ -65,7 +66,7 @@ const authenticateUser = (email, password, db) => {
   const user = findUserByEmail(email, db);
 
   // check that passwords match => return user object
-  if (user && user.password === password) {
+  if (user && bcrypt.compareSync(password, user.password)) {
     return user;
   }
   return false;
@@ -177,6 +178,15 @@ app.post('/urls/:id', (request, response) => {
   }
 });
 
+// create login page from template
+app.get('/login', (request, response) => {
+  const userID = request.cookies.user_id;
+  const templateVars = {
+    user: users[userID],
+  };
+  response.render('login', templateVars);
+});
+
 // create cookie for login
 app.post('/login', (request, response) => {
   const { email } = request.body;
@@ -231,21 +241,12 @@ app.post('/register', (request, response) => {
   users[userID] = {
     id: userID,
     email: userEmail,
-    password: userPass,
+    password: bcrypt.hashSync(userPass, 10),
   };
   // create user id cookie
   response.cookie('user_id', userID);
   // console.log(users);
   response.redirect('/urls');
-});
-
-// create login page from template
-app.get('/login', (request, response) => {
-  const userID = request.cookies.user_id;
-  const templateVars = {
-    user: users[userID],
-  };
-  response.render('login', templateVars);
 });
 
 app.listen(PORT, () => {
