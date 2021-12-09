@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 
+const { findUserByEmail } = require('./helpers');
+
 const app = express();
 // app.use(cookieParser());
 const PORT = 8080; // default port 8080
@@ -46,16 +48,16 @@ const urlDatabase = {
 // user database
 const users = {};
 
-// helper function: check email exists in database
-const findUserByEmail = (email, database) => {
-  for (const userId in database) {
-    const user = database[userId];
-    if (user.email === email) {
-      return user;
-    }
-  }
-  return false;
-};
+// // helper function: check email exists in database
+// const findUserByEmail = (email, database) => {
+//   for (const userId in database) {
+//     const user = database[userId];
+//     if (user.email === email) {
+//       return user;
+//     }
+//   }
+//   return false;
+// };
 
 // helper function: authenticate user
 const authenticateUser = (email, password, db) => {
@@ -192,7 +194,7 @@ app.post('/login', (request, response) => {
   const user = authenticateUser(email, password, users);
 
   if (user) {
-    request.session.user_id = userID;
+    request.session.user_id = user.id;
     response.redirect('/urls');
     return;
   }
@@ -244,7 +246,7 @@ app.post('/register', (request, response) => {
 
   // create user id cookie
   request.session.user_id = userID;
-  // console.log(users);
+  console.log(users);
   response.redirect('/urls');
 });
 
