@@ -112,11 +112,15 @@ app.get('/u/:shortURL', (request, response) => {
 app.post('/urls', (request, response) => {
   const shortURL = generateRandomString();
   const userID = request.session.user_id;
-  urlDatabase[shortURL] = {
-    longURL: request.body.longURL,
-    userID,
-  };
-  response.redirect(`/urls/${shortURL}`);
+  if (userID) {
+    urlDatabase[shortURL] = {
+      longURL: request.body.longURL,
+      userID,
+    };
+    response.redirect(`/urls/${shortURL}`);
+  } else {
+    response.status(400).send('You must be logged in to create a short URL.');
+  }
 });
 
 app.post('/urls/:shortURL/delete', (request, response) => {
