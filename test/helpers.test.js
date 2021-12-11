@@ -15,6 +15,8 @@ const testUsers = {
   },
 };
 
+/* eslint-disable */
+
 describe('findUserByEmail', () => {
   it('should return a user with valid email', () => {
     const user = findUserByEmail('user@example.com', testUsers);

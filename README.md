@@ -4,10 +4,13 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 ## Final Product
 
+MyURLs Page: Lists all URLs added by user.
 !["Main URLs List"](./docs/urls.png)
 
+Short URL Page: User can see information on the URL and edit it.
 !["Edit Url Page"](./docs/edit.png)
 
+Registration Page: User can register for the site here.
 !["Register Page"](./docs/register.png)
 
 ## Dependencies
