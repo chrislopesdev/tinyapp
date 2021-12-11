@@ -13,7 +13,7 @@ const findUserByEmail = (email, database) => {
 const generateRandomString = () => {
   let randomString = '';
 
-  for (const i = 0; i < 6; i++) {
+  for (let i = 0; i < 6; i++) {
     const randomCharCode = Math.floor(Math.random() * 26 + 97);
     const randomChar = String.fromCharCode(randomCharCode);
     randomString += randomChar;
